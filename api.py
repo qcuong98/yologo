@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from flask import Flask, request, jsonify
 from werkzeug import secure_filename
 
+import model
+
 ALLOWED_EXTENSIONS = set(['bmp', 'png', 'jpg', 'jpeg', 'tif', 'tiff'])
 
 app = Flask(__name__)
@@ -47,7 +49,9 @@ def upload_file():
             file_dir = os.path.join(app.config['TEMP_FOLDER'], temp_name)
             file.save(file_dir)
 
-            return file_dir, 200
+            image = cv2.imread(file_dir)
+            model_1 = model.get_model("cfg/coco.data", "cfg/yolov3.cfg", "weights/yolov3.weights")
+            return model.detect(model_1, image)[0][0], 200
 
             # if os.path.exists(file_dir):
             #     os.remove(file_dir)
