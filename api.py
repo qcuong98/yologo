@@ -23,9 +23,6 @@ app.config['TEMP_FOLDER'] = '/tmp/'
 app.secret_key = 'qcuong98 super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
 
-model_1 = None
-model_2 = None
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
@@ -91,7 +88,8 @@ def use_model_1():
 def use_model_2():
     return run_model(request.files, model_2)
 
+model_1 = model.get_model("cfg/coco.data", "cfg/yolov3.cfg", "weights/yolov3.weights")
+model_2 = model.get_model("cfg/yologo.data", "cfg/yologo.cfg", "weights/yologo.weights")
+
 if (__name__ == '__main__'):
-    model_1 = model.get_model("cfg/coco.data", "cfg/yolov3.cfg", "weights/yolov3.weights")
-    model_2 = model.get_model("cfg/yologo.data", "cfg/yologo.cfg", "weights/yologo.weights")
     app.run(host = "0.0.0.0", port = 8080)
