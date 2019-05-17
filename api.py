@@ -74,7 +74,7 @@ def run_model(files, model_id):
             return jsonify(result), 200
         else:
             result["code"] = 2
-            result["description"] = "File extension isn't supported (bmp, png, jpg, jpeg, tif, tiff)"
+            result["description"] = "File extension isn't supported"
             return jsonify(result), 400
 
     except Exception as e:
