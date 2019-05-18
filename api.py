@@ -11,7 +11,7 @@ import tempfile
 import cv2
 import matplotlib.pyplot as plt
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from werkzeug import secure_filename
 
 import model
@@ -87,6 +87,10 @@ def use_model_1():
 @app.route("/model_2", methods = ["POST"])
 def use_model_2():
     return run_model(request.files, model_2)
+
+@app.route("/", methods = ["GET"])
+def demo():
+    return render_template('home.html')
 
 model_1 = model.get_model("cfg/coco.data", "cfg/yolov3.cfg", "weights/yolov3.weights")
 model_2 = model.get_model("cfg/yologo.data", "cfg/yologo.cfg", "weights/yologo.weights")
