@@ -34,6 +34,7 @@ $(document).ready(function() {
     img.src = window.URL.createObjectURL( file );
     img.onload = function() {
       var form_data = new FormData($('#image-form')[0]);
+      $('#spinner').show();
       $.ajax({
         type:'POST',
         url:url_model,
@@ -44,7 +45,6 @@ $(document).ready(function() {
         success: function(response){
           console.log(response)
 
-          var result_str = ""
           var c = document.getElementById("img-canvas");
           var ctx = c.getContext("2d");
 
@@ -54,14 +54,28 @@ $(document).ready(function() {
 
           for (i in response.objects) {
             var obj = response['objects'][i];
-            result_str += obj['class'] + "\n";
+
             ctx.beginPath();
             ctx.lineWidth = "6";
-            ctx.strokeStyle = "red";
+            var color = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+            ctx.strokeStyle = color;
             ctx.rect(obj['bbox']['x'], obj['bbox']['y'], obj['bbox']['w'], obj['bbox']['h']); 
             ctx.stroke();
+
+            ctx.beginPath();
+            ctx.font = "30px Roboto";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
+            
+            var text = obj['class'] + ", " + Math.round(obj['conf'] * 100) + "%"
+
+            ctx.fillStyle = color;
+            var width = ctx.measureText(text).width;
+            ctx.fillRect(obj['bbox']['x'], obj['bbox']['y'], width, 30);
+            
+            ctx.fillStyle = "white";
+            ctx.fillText(text, obj['bbox']['x'], obj['bbox']['y']);
           }
-          document.getElementById("result-str").innerHTML = result_str;
         },
         error: function (jqXHR, status, error) {
           if (jqXHR.status&&jqXHR.status==400)
@@ -70,6 +84,7 @@ $(document).ready(function() {
             alert("Something went wrong");
         }
       });
+      $('#spinner').hide();
       window.URL.revokeObjectURL(img.src);
     };
   });
@@ -78,7 +93,7 @@ $(document).ready(function() {
 
 <body>
   <!-- the navbar -->
-  <nav class="navbar navbar-toggleable-md navbar-light bg-info">
+  <nav class="navbar navbar-toggleable-md navbar navbar-dark bg-primary">
     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -96,7 +111,7 @@ $(document).ready(function() {
   </nav>
 
   <!-- the jumbotron -->
-  <div class="jumbotron bg-warning">
+  <div class="jumbotron">
     <h1 class="display-3">Brand Logo Detection Using YOLOv3</h1>
     <p class="lead">Statistical Machine Learning Course</p>
     <hr class="my-4">
@@ -110,11 +125,13 @@ $(document).ready(function() {
         <input type="file" name="file" required>
         <input type="submit" value="Upload">
       </div>
+      <div class="spinner-border text-primary ml-5" role="status" id="spinner" hidden>
+        <span class="sr-only">Loading...</span>
+      </div>
     </form>
     <hr class="my-4">
 
-    <canvas id="img-canvas" width="0" height="0"></canvas>
-    <div id = "result-str" style="white-space: pre-line;"></div>
+    <canvas id="img-canvas" width="0" height="0" style="width:80%;display:block;margin: 0 auto;"></canvas>
   </div>
 
   <div class="container-fluid">
