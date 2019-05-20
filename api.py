@@ -60,10 +60,10 @@ def run_model(files, model_id):
                     "class": obj[0].decode('UTF-8'),
                     "conf": obj[1],
                     "bbox": {
-                        "x": x - w/2,
-                        "y": y - h/2,
-                        "w": w,
-                        "h": h
+                        "x": int(x - w/2),
+                        "y": int(y - h/2),
+                        "w": int(w),
+                        "h": int(h)
                     }
                 })
             result["code"] = 0

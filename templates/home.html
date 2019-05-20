@@ -8,43 +8,72 @@
   <title>YOLOGO</title>
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
   <link rel="stylesheet" href="static/css/custom.css">
+
+  <script src="static/js/jquery.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
 </head>
 
 <script>
-function onSubmit(){
-  console.log('onsubmit')
-  var id_model = document.getElementById("yolo-model").selectedIndex;
-  if (id_model == 0) {
-    url_model = '/model_1'
-  } else {
-    url_model = '/model_2'
-  }
+$(document).ready(function() {
+  window.URL = window.URL || window.webkitURL;
+  $("#image-form").submit(function(e) {
+    e.preventDefault();
+    console.log('onSubmit');
 
-  /* stop form from submitting normally */
-  event.preventDefault();
-  var form_data = new FormData($('#image-form')[0]);
-  $.ajax({
-    type:'POST',
-    url:url_model,
-    cache: false,
-    contentType: false,
-    processData: false,
-    data : form_data,
-    success: function(response){
-      var result_str = ""
-      console.log(response)
-      for (i in response.objects)
-	      result_str += response['objects'][i]['class'] + "\n";
-      document.getElementById("result-str").innerHTML = result_str
-    },
-    error: function (jqXHR, status, error) {
-      if (jqXHR.status&&jqXHR.status==400)
-        alert(jqXHR.responseText); 
-      else
-        alert("Something went wrong");
+    var id_model = document.getElementById("yolo-model").selectedIndex;
+    if (id_model == 0) {
+      url_model = '/model_1'
+    } else {
+      url_model = '/model_2'
     }
+    
+    var fileInput = $(this).find("input[type=file]")[0],
+    file = fileInput.files && fileInput.files[0];
+
+    var img = new Image();
+    img.src = window.URL.createObjectURL( file );
+    img.onload = function() {
+      var form_data = new FormData($('#image-form')[0]);
+      $.ajax({
+        type:'POST',
+        url:url_model,
+        cache: false,
+        contentType: false,
+        processData: false,
+        data : form_data,
+        success: function(response){
+          console.log(response)
+
+          var result_str = ""
+          var c = document.getElementById("img-canvas");
+          var ctx = c.getContext("2d");
+
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          ctx.drawImage(img, 0, 0);
+
+          for (i in response.objects) {
+            var obj = response['objects'][i];
+            result_str += obj['class'] + "\n";
+            ctx.beginPath();
+            ctx.lineWidth = "6";
+            ctx.strokeStyle = "red";
+            ctx.rect(obj['bbox']['x'], obj['bbox']['y'], obj['bbox']['w'], obj['bbox']['h']); 
+            ctx.stroke();
+          }
+          document.getElementById("result-str").innerHTML = result_str;
+        },
+        error: function (jqXHR, status, error) {
+          if (jqXHR.status&&jqXHR.status==400)
+            alert(jqXHR.responseText); 
+          else
+            alert("Something went wrong");
+        }
+      });
+      window.URL.revokeObjectURL(img.src);
+    };
   });
-}
+});
 </script>
 
 <body>
@@ -72,7 +101,7 @@ function onSubmit(){
     <p class="lead">Statistical Machine Learning Course</p>
     <hr class="my-4">
     
-    <form class="form-inline" onsubmit="onSubmit()" id="image-form">
+    <form class="form-inline" id="image-form" action="/" method="POST">
       <select class="custom-select my-1 mr-sm-2" id="yolo-model">
         <option value="1">YOLOv3</option>
         <option value="2">YOLOGO</option>
@@ -84,14 +113,13 @@ function onSubmit(){
     </form>
     <hr class="my-4">
 
-    <p>YOLOGO Dataset: <a href="http://image.ntua.gr/iva/datasets/flickr_logos/">Flickr Logos 27</a></p>
-    <hr class="my-4">
-
+    <canvas id="img-canvas" width="0" height="0"></canvas>
     <div id = "result-str" style="white-space: pre-line;"></div>
-    <canvas id="img-canvas"></canvas>
   </div>
 
   <div class="container-fluid">
+  <p>YOLOGO Dataset: <a href="http://image.ntua.gr/iva/datasets/flickr_logos/">Flickr Logos 27</a></p>
+  <hr class="my-4">
   <!-- Button trigger modal -->
   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
   Author Infomation
@@ -116,8 +144,6 @@ function onSubmit(){
     </div>
   </div>
 </div>
-<script src="static/js/jquery.min.js"></script>
-<script src="static/js/bootstrap.min.js"></script>
 </body>
 
 </html>
