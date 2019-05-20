@@ -12,16 +12,20 @@
 
 <script>
 function onSubmit(){
-  console.log('onsubmit');
-  // var selectedText = document.getElementById("yolo-model").find("option:selected").text();
-  // console.log(selectedText)
+  console.log('onsubmit')
+  var id_model = document.getElementById("yolo-model").selectedIndex;
+  if (id_model == 0) {
+    url_model = '/model_1'
+  } else {
+    url_model = '/model_2'
+  }
 
   /* stop form from submitting normally */
   event.preventDefault();
   var form_data = new FormData($('#image-form')[0]);
   $.ajax({
     type:'POST',
-    url:'/model_2',
+    url:url_model,
     cache: false,
     contentType: false,
     processData: false,
@@ -31,7 +35,7 @@ function onSubmit(){
       console.log(response)
       for (i in response.objects)
 	      result_str += response['objects'][i]['class'] + "\n";
-      document.getElementById("result_str").innerHTML = result_str
+      document.getElementById("result-str").innerHTML = result_str
     },
     error: function (jqXHR, status, error) {
       if (jqXHR.status&&jqXHR.status==400)
@@ -70,7 +74,6 @@ function onSubmit(){
     
     <form class="form-inline" onsubmit="onSubmit()" id="image-form">
       <select class="custom-select my-1 mr-sm-2" id="yolo-model">
-        <option selected>Choose a model...</option>
         <option value="1">YOLOv3</option>
         <option value="2">YOLOGO</option>
       </select>
@@ -85,7 +88,8 @@ function onSubmit(){
     <p>Dataset: <a href="http://image.ntua.gr/iva/datasets/flickr_logos/">Flickr Logos 27</a></p>
     <hr class="my-4">
 
-    <div id = "result_str" style="white-space: pre-line;"></div>
+    <div id = "result-str" style="white-space: pre-line;"></div>
+    <canvas id="img-canvas"></canvas>
   </div>
 
   <div class="container-fluid">
