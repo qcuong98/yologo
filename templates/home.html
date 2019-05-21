@@ -18,7 +18,6 @@ $(document).ready(function() {
   window.URL = window.URL || window.webkitURL;
   $("#image-form").submit(function(e) {
     e.preventDefault();
-    console.log('onSubmit');
 
     var id_model = document.getElementById("yolo-model").selectedIndex;
     if (id_model == 0) {
@@ -29,22 +28,24 @@ $(document).ready(function() {
     
     var fileInput = $(this).find("input[type=file]")[0],
     file = fileInput.files && fileInput.files[0];
+    
+    var form_data = new FormData($('#image-form')[0]);
+    $.ajax({
+      type:'POST',
+      url:url_model,
+      cache: false,
+      contentType: false,
+      processData: false,
+      data : form_data,
+      success: function(response){
+        console.log(response)
 
-    var img = new Image();
-    img.src = window.URL.createObjectURL( file );
-    img.onload = function() {
-      var form_data = new FormData($('#image-form')[0]);
-      $('#spinner').show();
-      $.ajax({
-        type:'POST',
-        url:url_model,
-        cache: false,
-        contentType: false,
-        processData: false,
-        data : form_data,
-        success: function(response){
-          console.log(response)
+        var img = new Image();
+        img.src = window.URL.createObjectURL( file );
 
+        threshold = document.getElementById('confident').selectedIndex * 0.1 + 0.5
+
+        img.onload = function() {
           var c = document.getElementById("img-canvas");
           var ctx = c.getContext("2d");
 
@@ -55,6 +56,9 @@ $(document).ready(function() {
           for (i in response.objects) {
             var obj = response['objects'][i];
 
+            if (obj['conf'] < threshold)
+              continue;
+
             ctx.beginPath();
             ctx.lineWidth = "6";
             var color = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
@@ -63,7 +67,7 @@ $(document).ready(function() {
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.font = "30px Roboto";
+            ctx.font = "30px Lucida Sans Unicode";
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             
@@ -76,18 +80,26 @@ $(document).ready(function() {
             ctx.fillStyle = "white";
             ctx.fillText(text, obj['bbox']['x'], obj['bbox']['y']);
           }
-        },
-        error: function (jqXHR, status, error) {
-          if (jqXHR.status&&jqXHR.status==400)
-            alert(jqXHR.responseText); 
-          else
-            alert("Something went wrong");
+          window.URL.revokeObjectURL(img.src);
         }
-      });
-      $('#spinner').hide();
-      window.URL.revokeObjectURL(img.src);
-    };
+      },
+      error: function (jqXHR, status, error) {
+        if (jqXHR.status&&jqXHR.status==400)
+          alert(jqXHR.responseText); 
+        else
+          alert("Something went wrong");
+      }
+    });
   });
+});
+</script>
+
+<script>
+$(document).ready(function() {
+  $('#file-form').on('change',function(){
+    var fileName = $(this).val().split('\\').pop();
+    $(this).next('.custom-file-label').html(fileName);
+  })
 });
 </script>
 
@@ -117,17 +129,30 @@ $(document).ready(function() {
     <hr class="my-4">
     
     <form class="form-inline" id="image-form" action="/" method="POST">
+      <label for="yolo-model">Model: </label>
       <select class="custom-select my-1 mr-sm-2" id="yolo-model">
         <option value="1">YOLOv3</option>
         <option value="2">YOLOGO</option>
       </select>
-      <div>
-        <input type="file" name="file" required>
-        <input type="submit" value="Upload">
+      <label for="confident">Confident Threshold: </label>
+      <select class="custom-select my-1 mr-sm-2" id="confident">
+        <option value="1">50%</option>
+        <option value="2">60%</option>
+        <option value="3">70%</option>
+        <option value="4">80%</option>
+        <option value="5">90%</option>
+      </select>
+      <div class="input-group my-1 mr-sm-2">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Upload</span>
+        </div>
+        <div class="custom-file">
+          <input type="file" name="file" class="custom-file-input" id="file-form" required>
+          <label class="custom-file-label" for="file-form">Choose file</label>
+          <div class="invalid-feedback">Example invalid custom file feedback</div>
+        </div>
       </div>
-      <div class="spinner-border text-primary ml-5" role="status" id="spinner" hidden>
-        <span class="sr-only">Loading...</span>
-      </div>
+      <button type="submit" class="btn btn-primary my-1 mr-sm-2">Detect</button>
     </form>
     <hr class="my-4">
 
