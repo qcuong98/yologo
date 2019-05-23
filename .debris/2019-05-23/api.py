@@ -51,7 +51,7 @@ def run_model(files, model_id):
             objs = model.detect(model_id, file_dir)
             if os.path.exists(file_dir):
                 os.remove(file_dir)
-
+                
             for obj in objs:
                 x, y, w, h = obj[2]
                 result["objects"].append({
