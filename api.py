@@ -49,19 +49,25 @@ def run_model(files, model_id):
 
             file.save(file_dir)
             objs = model.detect(model_id, file_dir)
+            img = cv2.imread(file_dir)
+            height, width = img.shape[:2]
             if os.path.exists(file_dir):
                 os.remove(file_dir)
 
             for obj in objs:
                 x, y, w, h = obj[2]
+                x_1 = max(0, int(x - w/2))
+                y_1 = max(0, int(y - h/2))
+                x_2 = min(width, int(x + w/2))
+                y_2 = min(height, int(y + h/2))
                 result["objects"].append({
                     "class": obj[0].decode('UTF-8'),
                     "conf": obj[1],
                     "bbox": {
-                        "x": int(x - w/2),
-                        "y": int(y - h/2),
-                        "w": int(w),
-                        "h": int(h)
+                        "x": x_1,
+                        "y": y_1,
+                        "w": x_2 - x_1,
+                        "h": y_2 - y_1
                     }
                 })
             result["code"] = 0
